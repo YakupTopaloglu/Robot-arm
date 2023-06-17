@@ -1,7 +1,7 @@
 import cv2
 
 # Kamera açma
-cap = cv2.VideoCapture("http://192.168.0.19:8080/video")
+cap = cv2.VideoCapture("http://"ip adress" /video")#we have to get camera's ip adress
 
 while True:
     # Görüntüyü yakalama
