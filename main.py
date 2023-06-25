@@ -16,7 +16,10 @@ while True:
         cv2.line(frame, (0, y), (width, y), (0, 255, 0), 1)  # Yatay çizgiler
 
     # Görüntüyü gösterme
-    cv2.imshow('IP Kamera', frame)
+    timer=cv2.getTickCount()
+    fps=cv2.getTickFrequency()/(cv2.getTickCount()-timer)
+    cv2.putText(frame,str(int(fps)),(75,50),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),2)
+    cv2.imshow('Tracking', frame)
 
     # Çıkış için q tuşuna basma kontrolü
     if cv2.waitKey(1) & 0xFF == ord('q'):
