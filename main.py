@@ -1,46 +1,52 @@
 import cv2
 import numpy as np
 from PIL import Image
-from pyfirmata import Arduino, SERVO
+from pyfirmata import Arduino, SERVO, util
 from time import sleep
+import threading
 
-# Arduino ve servonun bağlantı bilgilerini burada tanımlayın
-port = 'COM5'
-pin = 10
-board = Arduino(port)
-board.digital[pin].mode = SERVO
+def object_detection():
+    
+    def get_limits(color):
+        c = np.uint8([[color]])  # BGR values
+        hsvC = cv2.cvtColor(c, cv2.COLOR_BGR2HSV)
 
-# Servoyu hareket ettiren fonksiyon
-def rotate_servo(pin, angle):
-    board.digital[pin].write(angle)
-    sleep(0.015)
-
-# İkinci kod parçasını çalıştıran fonksiyon
-def main_function():
-    yellow = [0, 255, 255]
-    cap = cv2.VideoCapture(0)#laptop kamerası kullanılıyor, eğer başka kamera girilecekse 1-2 rakamları ya da "http://192.168.0.19:8080/video" girilmesi gerek.
-    #"http://192.168.0.19:8080/video" bu kamera telefonun kamerasıdır
-    is_object_detected = False
-
-    while True:
-        ret, frame = cap.read()
-
-        hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-        lowerLimit, upperLimit = get_limits(color=yellow)
-
-        mask = cv2.inRange(hsvImage, lowerLimit, upperLimit)
-
-        mask_ = Image.fromarray(mask)
+        hue = hsvC[0][0][0]  # Get the hue value
         
+        # Handle red hue wrap-around
+        if hue >= 165:  # Upper limit for divided red hue
+            lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
+            upperLimit = np.array([180, 255, 255], dtype=np.uint8)
+        elif hue <= 15:  # Lower limit for divided red hue
+            lowerLimit = np.array([0, 100, 100], dtype=np.uint8)
+            upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
+        else:
+            lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
+            upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
 
-        bbox = mask_.getbbox()
+        return lowerLimit, upperLimit
 
+    yellow=[0,255,255]
+    cap=cv2.VideoCapture(0)
+    while True:
+        ret,frame=cap.read()
+
+        hsvImage=cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+        
+        lowerLimit, upperLimit=get_limits(color=yellow)
+
+        mask=cv2.inRange(hsvImage,lowerLimit,upperLimit)
+
+        mask_=Image.fromarray(mask)
+
+        bbox=mask_.getbbox()    
+        
         if bbox is not None:
-            x1, y1, x2, y2 = bbox
+            x1,y1,x2,y2=bbox
 
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
-                 # Ekranın merkezine olan uzaklığı hesapla
+            cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),5)
+            
+        # Ekranın merkezine olan uzaklığı hesapla
             screen_center_x = frame.shape[1] // 2
             screen_center_y = frame.shape[0] // 2
             moments = cv2.moments(mask)
@@ -53,37 +59,44 @@ def main_function():
             fps=cv2.getTickFrequency()/(cv2.getTickCount()-timer)
             cv2.putText(frame,str(int(fps)),(50,250),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),2)
             cv2.circle(frame, (cx,cy), 7, (255, 255, 255), -1)
-            if not is_object_detected:
-                rotate_servo(pin, 180)
-                is_object_detected = True
-        else:
-            is_object_detected = False
-
-        cv2.imshow("frame", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        cv2.imshow("frame",frame)
+        if cv2.waitKey(1) & 0xff == ord("q"):
             break
 
     cap.release()
     cv2.destroyAllWindows()
 
-# Renk sınırlarını bulan fonksiyon
-def get_limits(color):
-    c = np.uint8([[color]])  # BGR değerleri
-    hsvC = cv2.cvtColor(c, cv2.COLOR_BGR2HSV)
+def servo_function():
+    port ='COM5'
+    pin=10
+    board=Arduino(port)
 
-    hue = hsvC[0][0][0]  # Hue değerini al
+    board.digital[pin].mode=SERVO
 
-    # Kırmızı renkteki sarının sarma nedeniyle bölünmüş renk sınırlarını belirle
-    if hue >= 165:  # Bölünmüş kırmızı renk sınırları için üst limit
-        lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
-        upperLimit = np.array([180, 255, 255], dtype=np.uint8)
-    elif hue <= 15:  # Bölünmüş kırmızı renk sınırları için alt limit
-        lowerLimit = np.array([0, 100, 100], dtype=np.uint8)
-        upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
-    else:
-        lowerLimit = np.array([hue - 10, 100, 100], dtype=np.uint8)
-        upperLimit = np.array([hue + 10, 255, 255], dtype=np.uint8)
+    def rotatservo(pin,angle):
+        board.digital[pin].write(angle)
+        sleep(0.015)
 
-    return lowerLimit, upperLimit
+    while True:
+        x=input("input : ")
+        if x=="1":
+            for i in range(0,100):
+                rotatservo(pin,i)
+        elif x=="2":
+            for i in range(0,90):
+                rotatservo(pin,i)
+        elif x=="3":
+            for i in range(0,270):
+                rotatservo(pin,i)
+        elif x=="4":
+            break
 
-main_function()
+t1=threading.Thread(target=object_detection)
+t2=threading.Thread(target=servo_function)
+
+t1.start()
+t2.start()
+
+        
+
+
