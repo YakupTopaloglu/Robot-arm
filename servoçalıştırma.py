@@ -22,3 +22,10 @@ while True:
     elif x=="3":
         for i in range(0,270):
             rotatservo(pin,i)
+    elif x=="4":
+        print("run is end")
+        break
+    elif x=="5":
+            rotatservo(pin,0)
+
+    
