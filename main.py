@@ -29,6 +29,7 @@ def object_detection():
 
     yellow=[0,255,255]
     cap=cv2.VideoCapture(0)
+    #"http://192.168.0.19:8080/video"
     while True:
         ret,frame=cap.read()
 
@@ -84,13 +85,16 @@ def servo_function(distance_y,frame):
         if distance_y==0:
             board.digital[pin].write(90)
             f.write("distance="+str(distance_y)+" "+str(90)+"\n")
+            break
 
         elif distance_y>0:
             board.digital[pin].write((frame.shape[1]//360)*distance_y) 
-            f.write("distance="+str(distance_y)+" "+str((frame.shape[1]//360)*distance_y)+"\n")   
+            f.write("distance="+str(distance_y)+" "+str((frame.shape[1]//360)*distance_y)+"\n") 
+            break
         elif distance_y<0:
             board.digital[pin].write((frame.shape[1]//360)*-distance_y)
             f.write("distance="+str(distance_y)+" "+str((frame.shape[1]//360)*-distance_y)+"\n")
+            break
 
 t1=threading.Thread(target=object_detection)
 t2=threading.Thread(target=servo_function)
