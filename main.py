@@ -28,7 +28,8 @@ def get_limits(color):
 
 def object_detection(ser):
     yellow=[0,255,255]
-    cap=cv2.VideoCapture("http://192.168.173.165:8080/video")
+    #cap=cv2.VideoCapture("http://192.168.173.165:8080/video")
+    cap=cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,720)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)
     #"http://192.168.173.165:8080/video"
@@ -55,8 +56,11 @@ def object_detection(ser):
             cx = int(moments["m10"] / moments["m00"])
             cy = int(moments["m01"] / moments["m00"])
             distance_y = cy - screen_center_y
-            distance_text = f"Distance: {distance_y}"
+            distance_x=cx-screen_center_x
+            distance_text = f"Distance_Y: {distance_y}"
+            distance_text2=f"Distance_X:{distance_x}"
             cv2.putText(frame, distance_text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            cv2.putText(frame, distance_text2, (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             timer=cv2.getTickCount()
             fps=cv2.getTickFrequency()/(cv2.getTickCount()-timer)
             cv2.putText(frame,"fps:"+str(int(fps)),(50,250),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),2)
@@ -75,15 +79,11 @@ def servo_function(distance_y,frame,ser):
             ser.write(b'90\n')
             f.write("distance="+str(distance_y)+" "+str(90)+"\n")
             break
-
-        elif distance_y>0:
-            ser.write(bytes(str((frame.shape[1]//360)*distance_y) + '\n', 'utf-8')) 
+        else:
+            ser.write(bytes(str(distance_y) + '\n', 'utf-8')) 
             f.write("distance="+str(distance_y)+" "+((str(frame.shape[1]//360))*distance_y)+"\n")   
             break
-        elif distance_y<0:
-            ser.write(bytes(str((frame.shape[1]//360)*-distance_y) + '\n', 'utf-8'))
-            f.write("distance="+str(distance_y)+" "+str((frame.shape[1]//360)*-distance_y)+"\n")
-            break
+
 
 try:
     ser = serial.Serial('COM6', 9600)
@@ -97,3 +97,5 @@ if ser is not None:
 
     t1.start()
     t2.start()
+
+
