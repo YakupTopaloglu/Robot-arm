@@ -32,6 +32,8 @@ def object_detection(ser):
     cap=cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,720)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)
+    print("height:",cv2.CAP_PROP_FRAME_HEIGHT)
+    print("width",cv2.CAP_PROP_FRAME_WIDTH)
     #"http://192.168.173.165:8080/video"
     while True:
         ret,frame=cap.read()
@@ -65,25 +67,44 @@ def object_detection(ser):
             fps=cv2.getTickFrequency()/(cv2.getTickCount()-timer)
             cv2.putText(frame,"fps:"+str(int(fps)),(50,250),cv2.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255),2)
             cv2.circle(frame, (cx,cy), 7, (255, 255, 255), -1)
-            servo_function(distance_y,frame,ser)
+            servo_function(distance_y,distance_x,frame,ser)
         cv2.imshow("frame",frame)
-        if cv2.waitKey(1) & 0xff == ord("q"):
+        if cv2.waitKey(1) & 0xff == ord("q") or cv2.waitKey(1) & 0xff == ord("Q"):
             break
 
     cap.release()
     cv2.destroyAllWindows()
 
-def servo_function(distance_y,frame,ser):
+# def servo_function(distance_y,frame,ser):
+#     while True:
+#         if distance_y==0:
+#             ser.write(b'90\n')
+#             #f.write("distance="+str(distance_y)+" "+str(90)+"\n")
+#             break
+#         else:
+#             ser.write(bytes(str(distance_y) + '\n', 'utf-8')) 
+#             #f.write("distance="+str(distance_y)+" "+((str(map(distance_y, 360, -360, 180, 0))))+"\n")   
+#             break
+        
+    """
+    def servo_function(distance_y, distance_x, frame, ser):
     while True:
-        if distance_y==0:
+        if distance_y == 0 and distance_x == 0:
             ser.write(b'90\n')
-            f.write("distance="+str(distance_y)+" "+str(90)+"\n")
             break
         else:
-            ser.write(bytes(str(distance_y) + '\n', 'utf-8')) 
-            f.write("distance="+str(distance_y)+" "+((str(frame.shape[1]//360))*distance_y)+"\n")   
+            ser.write(bytes(str(distance_y) + ',' + str(distance_x) + '\n', 'utf-8')) 
             break
 
+    """
+def servo_function(distance_y, distance_x, frame, ser):
+    while True:
+        if distance_y == 0 and distance_x == 0:
+            ser.write(b'90\n')
+            break
+        else:
+            ser.write(bytes(str(distance_y) + ',' + str(distance_x) + '\n', 'utf-8')) 
+            break
 
 try:
     ser = serial.Serial('COM6', 9600)
@@ -97,5 +118,6 @@ if ser is not None:
 
     t1.start()
     t2.start()
+
 
 
