@@ -1,6 +1,6 @@
 # Object Tracking with Arduino Uno and Python
 
-![Tracking example gif](https://github.com/YakupTopaloglu/Excel-Python/assets/112806251/d9021792-d2aa-4c88-b1aa-fb01b8691c0b)
+
 
 # Description
 This project showcases an object tracking system using an Arduino Uno and Python. Originally intended to be implemented on a robot arm, we decided to modify the project to work on a laptop to reduce costs without compromising functionality.
